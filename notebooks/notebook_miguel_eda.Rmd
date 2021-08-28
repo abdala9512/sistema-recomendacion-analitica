@@ -1,0 +1,31 @@
+---
+title: "Instacart - EDA"
+author: "Miguel Arquez Abdala"
+date: "28/8/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##
+```{r}
+library(readr)
+
+source("../src/ggplot_custom_theme.R")
+
+```
+
+
+
+Hola Efrain, este es texto del notebook
+
+```{r eval=FALSE}
+orders <- read_csv('../data/orders.csv')
+products <- read_csv('../data/products.csv')
+order_products <- read_csv('../data/order_products__train.csv')
+order_products_prior <- read_csv('../data/order_products__prior.csv')
+aisles <- read_csv('../data/aisles.csv')
+departments <- read_csv('../data/departments.csv')
+```
