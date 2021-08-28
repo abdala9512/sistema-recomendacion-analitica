@@ -1,3 +1,7 @@
+# Archivos xlxs
+*.xlsx
+*.xls
+
 # Archivos csv
 *.csv
 
