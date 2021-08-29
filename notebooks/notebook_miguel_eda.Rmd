@@ -29,8 +29,7 @@ source("../src/ggplot_custom_theme.R")
 
 
 ```{r message = FALSE}
-
-load("instcart_data.RData")
+load("../data/instcart_data_samples.RData")
 ```
 
 
