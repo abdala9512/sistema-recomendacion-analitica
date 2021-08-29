@@ -23,6 +23,8 @@ library(arules)
 library(arulesViz)
 
 
+# https://www.cienciadedatos.net/documentos/43_reglas_de_asociacion
+
 options(scipen = 999, digits = 4)
 windowsFonts("Roboto" = windowsFont("Roboto"))
 source("../src/ggplot_custom_theme.R")
@@ -106,4 +108,20 @@ order_products %>%
   arrange(desc(count)) 
 ```
 
-## Reglas de asociacion
+## Reglas de asociacion - Preparacion de datos
+
+```{r}
+transactionsDF <- read.transactions(file = "../data/order_products_samples.csv",
+                                   format = "single",
+                                   sep = ",",
+                                   header = TRUE,
+                                   cols = c("order_id", "product_name"),
+                                   rm.duplicates = TRUE)
+
+
+```
+
+
+```{r}
+inspect(transactionsDF[1:5])
+```

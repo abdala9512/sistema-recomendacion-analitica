@@ -1,5 +1,6 @@
 library(readr)
 library(dplyr)
+library(magrittr)
 
 
 
@@ -41,5 +42,11 @@ save(order_products,
      orders,
      file =  "./data/instcart_data_sample.RData")
 
+
+# csv para libreria arules
+write_csv(order_products %>%
+            left_join(product_catalog, by = "product_id") %>%
+           select(order_id, product_name),
+          file = "./data/order_products_samples.csv")
 
 rm(list = ls()); gc()
