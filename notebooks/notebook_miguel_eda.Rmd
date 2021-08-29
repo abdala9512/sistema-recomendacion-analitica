@@ -1,8 +1,13 @@
 ---
-title: "Instacart - EDA"
-author: "Miguel Arquez Abdala"
-date: "28/8/2021"
-output: html_document
+title: "InstarcarT"
+author: "Miguel"
+date: "27/08/2021"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+    highlight: tango
 ---
 
 ```{r setup, include=FALSE}
@@ -10,22 +15,52 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ##
-```{r}
+```{r message=FALSE, warning=FALSE}
 library(readr)
+library(dplyr)
+library(magrittr)
+library(arules)
+library(arulesViz)
+
 
 source("../src/ggplot_custom_theme.R")
 
 ```
 
 
+```{r message = FALSE}
 
-Hola Efrain, este es texto del notebook
+load("instcart_data.RData")
+```
 
-```{r eval=FALSE}
-orders <- read_csv('../data/orders.csv')
-products <- read_csv('../data/products.csv')
-order_products <- read_csv('../data/order_products__train.csv')
-order_products_prior <- read_csv('../data/order_products__prior.csv')
-aisles <- read_csv('../data/aisles.csv')
-departments <- read_csv('../data/departments.csv')
+
+
+```{r}
+orders %>% glimpse()
+products %>% glimpse()
+order_products %>% glimpse()
+order_products_prior %>%  glimpse()
+aisles %>% glimpse()
+departments %>%  glimpse()
+
+```
+
+
+
+```{r}
+```
+
+```{r}
+order_products_prior %>% 
+  left_join(product_catalog, by = "product_id") %>% 
+    ggplot(aes(y = department)) +
+    geom_bar(stat = 'count', fill = "#28FFBF") +
+    labs(
+      title =  "Transacciones  \nagrupadas",
+    ) +
+    ylab("") +
+    xlab("Número de productos") +
+    coord_flip() +
+    custom_style() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
