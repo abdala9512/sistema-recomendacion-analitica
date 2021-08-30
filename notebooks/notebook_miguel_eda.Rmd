@@ -23,7 +23,7 @@ library(arules)
 library(arulesViz)
 
 
-# https://www.cienciadedatos.net/documentos/43_reglas_de_asociacion
+# 
 
 options(scipen = 999, digits = 4)
 windowsFonts("Roboto" = windowsFont("Roboto"))
@@ -65,6 +65,8 @@ order_products %>%
     custom_style() +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
+
+
 ```{r}
 orders %>% 
   ggplot(aes(x = order_hour_of_day)) +
@@ -75,7 +77,9 @@ orders %>%
   ylab("") +
   custom_style()
 ```
-```{r warnings=FALSE}
+
+
+```{r warnings=FALSE, message=FALSE}
 orders %>% 
   ggplot(aes(x = days_since_prior_order)) +
   geom_histogram(color = "#ffffff", fill = "#57CC99") +
@@ -99,6 +103,8 @@ order_products %>%
   ylab("") +
   custom_style()
 ```
+
+
 ```{r}
 order_products %>% 
   group_by(product_id) %>% 
@@ -124,4 +130,59 @@ transactionsDF <- read.transactions(file = "../data/order_products_samples.csv",
 
 ```{r}
 inspect(transactionsDF[1:5])
+```
+
+
+```{r}
+sizes_ <- size(transactionsDF)
+summary(sizes_)
+```
+
+
+```{r}
+quantile(sizes_, probs = seq(0,1,0.1))
+```
+
+
+
+```{r}
+item_frequencies <- itemFrequency(x = transactionsDF, type = "relative") # type = absolute para ver el num. de transacciones
+item_frequencies %>% sort(decreasing = TRUE) %>% head(10)
+```
+
+
+
+```{r}
+support_ <- 100 / dim(transactionsDF)[1]
+itemsets <- apriori(data = transactionsDF,
+                    parameter = list(support = support_,
+                                     minlen = 1,
+                                     maxlen = 20,
+                                     target = "frequent itemset")) 
+```
+
+3081 itemsets que tienen un soporte mayor a 100/88371, formados por uno o dos items principalmente
+
+```{r}
+summary(itemsets)
+```
+
+
+```{r}
+top_20_itemsets <- sort(itemsets, by = "support", decreasing = TRUE)[1:20]
+inspect(top_20_itemsets) 
+```
+
+
+
+```{r}
+rules_ <- apriori(data = transactionsDF,
+                  parameter = list(support = support_,
+                                   confidence = 0.60,
+                                   target = "rules"))
+```
+
+
+```{r}
+summary(rules_)
 ```
