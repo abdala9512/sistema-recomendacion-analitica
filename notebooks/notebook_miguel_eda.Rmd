@@ -104,6 +104,20 @@ order_products %>%
   custom_style()
 ```
 
+```{r warnings=FALSE, message=FALSE}
+orders %>% 
+  group_by(user_id) %>% 
+  count() %>% 
+  ggplot(aes(x = n)) +
+  geom_histogram(color = "#ffffff", fill = "#79B4B7") +
+  labs(
+    title = "Distribución total ordenes por cliente"
+  ) +
+  ylab("") +
+  xlab("Ordenes") +
+  custom_style()
+```
+
 
 ```{r}
 order_products %>% 
@@ -121,7 +135,7 @@ transactionsDF <- read.transactions(file = "../data/order_products_samples.csv",
                                    format = "single",
                                    sep = ",",
                                    header = TRUE,
-                                   cols = c("order_id", "product_name"),
+                                   cols = c("order_id", "aisle"),
                                    rm.duplicates = TRUE)
 
 
@@ -153,12 +167,10 @@ item_frequencies %>% sort(decreasing = TRUE) %>% head(10)
 
 
 ```{r}
-support_ <- 100 / dim(transactionsDF)[1]
+support_ <- 5000 / dim(transactionsDF)[1]
 itemsets <- apriori(data = transactionsDF,
                     parameter = list(support = support_,
-                                     minlen = 1,
-                                     maxlen = 20,
-                                     target = "frequent itemset")) 
+                                     confidence=0.6)) 
 ```
 
 3081 itemsets que tienen un soporte mayor a 100/88371, formados por uno o dos items principalmente
@@ -169,7 +181,7 @@ summary(itemsets)
 
 
 ```{r}
-top_20_itemsets <- sort(itemsets, by = "support", decreasing = TRUE)[1:20]
+top_20_itemsets <- sort(itemsets, by = "lift", decreasing = TRUE)[1:10]
 inspect(top_20_itemsets) 
 ```
 
@@ -180,6 +192,14 @@ rules_ <- apriori(data = transactionsDF,
                   parameter = list(support = support_,
                                    confidence = 0.60,
                                    target = "rules"))
+```
+
+```{r}
+plot(sort(itemsets, by='lift'),
+     method="graph",
+     edge.arrow.size = 0.2,
+     colors = c("#6F69AC", "#E8F6EF"))
+
 ```
 
 
