@@ -46,7 +46,7 @@ save(order_products,
 # csv para libreria arules
 write_csv(order_products %>%
             left_join(product_catalog, by = "product_id") %>%
-           select(order_id, product_name),
+           select(order_id, product_name, aisle, department),
           file = "./data/order_products_samples.csv")
 
 rm(list = ls()); gc()
