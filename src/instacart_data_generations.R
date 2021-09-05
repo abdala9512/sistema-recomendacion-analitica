@@ -49,4 +49,13 @@ write_csv(order_products %>%
            select(order_id, product_name, aisle, department),
           file = "./data/order_products_samples.csv")
 
+
+# .csv  sin PAsillos populares
+write_csv(order_products %>%
+            left_join(product_catalog, by = "product_id") %>%
+            select(order_id, product_name, aisle, department) %>%
+            filter(!aisle %in% c("fresh fruits","fresh vegetables", "packaged vegetables fruits" )),
+          file = "./data/order_products_samples_no_popular.csv")
+
+
 rm(list = ls()); gc()

@@ -128,6 +128,22 @@ order_products %>%
   arrange(desc(count)) 
 ```
 
+
+```{r}
+rules_aisles <- order_products %>% 
+  left_join(product_catalog, by = "product_id") %>% 
+  group_by(aisle) %>% 
+  count() %>% 
+  ungroup() %>% 
+  arrange(desc(n)) %>% 
+ # filter(!aisle %in% c("fresh fruits","fresh vegetables", "packaged vegetables fruits" )) %>% 
+  mutate(pct = n / sum(n),
+         cumulative = cumsum(pct)) %>% 
+  filter(cumulative <= 0.8) %>% 
+  select(aisle) %>% 
+  pull()
+```
+
 ## Reglas de asociacion - Preparacion de datos
 
 ```{r}
@@ -135,7 +151,7 @@ transactionsDF <- read.transactions(file = "../data/order_products_samples.csv",
                                    format = "single",
                                    sep = ",",
                                    header = TRUE,
-                                   cols = c("order_id", "aisle"),
+                                   cols = c("order_id", "department"),
                                    rm.duplicates = TRUE)
 
 
@@ -170,7 +186,8 @@ item_frequencies %>% sort(decreasing = TRUE) %>% head(10)
 support_ <- 5000 / dim(transactionsDF)[1]
 itemsets <- apriori(data = transactionsDF,
                     parameter = list(support = support_,
-                                     confidence=0.6)) 
+                                     confidence=0.7,
+                                     maxlen=2)) 
 ```
 
 3081 itemsets que tienen un soporte mayor a 100/88371, formados por uno o dos items principalmente
@@ -181,7 +198,7 @@ summary(itemsets)
 
 
 ```{r}
-top_20_itemsets <- sort(itemsets, by = "lift", decreasing = TRUE)[1:10]
+top_20_itemsets <- sort(itemsets, by = "lift", decreasing = TRUE)[1:20]
 inspect(top_20_itemsets) 
 ```
 
@@ -201,8 +218,75 @@ plot(sort(itemsets, by='lift'),
      colors = c("#6F69AC", "#E8F6EF"))
 
 ```
+## Estrategia Sobre aplicacion Web
+
+```{r}
+
+strategy1 <- product_catalog %>%  filter(department %in% c("produce" , "dairy eggs")) %>% select(product_name) %>% pull()
+
+products_ <- read.transactions(file = "../data/order_products_samples.csv",
+                                   format = "single",
+                                   sep = ",",
+                                   header = TRUE,
+                                   cols = c("order_id", "aisle"),
+                                   rm.duplicates = TRUE)
+
+rules_def <- vector(mode = "list",length = length(rules_aisles))
+
+for (i in seq_along(rules_aisles)) {
+  
+  rule_strategy1 <- apriori(data = products_,
+                    parameter = list(support = 0.0001,
+                                     confidence=0.7,
+                                     maxlen=4),
+                    appearance = list(rhs = rules_aisles[i])) 
+  
+  if (length(rule_strategy1) == 0) {
+    next
+  } else {
+    
+    rules_df <- as(rule_strategy1, "data.frame") %>%
+    arrange(desc(lift)) %>% 
+    separate(rules, c("lhs", "rhs"), "=>") %>% 
+    top_n(3)
+    
+    rules_def[[i]] <- rules_df
+  }
+  
+  
+  
+  
+}
+
+reglas_finales <- rules_def %>% 
+  bind_rows()
+
+
+# filtrado_reglas <- arules::subset(x = rule_strategy1,
+#                           subset = lhs %ain% strategy1)
+```
 
 
 ```{r}
-summary(rules_)
+
+inspect(sort(rule_strategy1, by = "count", decreasing = TRUE))
+
+```
+
+
+```{r}
+ rule_strategy1 <- apriori(data = products_,
+                    parameter = list(support = 0.0001,
+                                     confidence=0.7,
+                                     maxlen=4),
+                    appearance = list(rhs = "frozen meals")) 
+```
+
+
+```{r}
+plot(sort(rule_strategy1, by='lift'),
+     method="graph",
+     edge.arrow.size = 0.2,
+     colors = c("#6F69AC", "#E8F6EF"))
+
 ```
