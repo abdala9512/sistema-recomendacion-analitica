@@ -3,17 +3,37 @@ library(dplyr)
 library(magrittr)
 
 
+# Calculo de muestra representativa de la poblacion
+sample_size_calc <- function(population, error, conf, p = 0.5){
+
+  zscore <- qnorm((1-conf) / 2) ^ 2
+  num <- ( zscore * p * (1 - p) ) / (error ^ 2)
+  den <- 1 + ( zscore * p * (1 - p) ) / (error^2 * population)
+
+  return(num / den)
+
+}
+
 
 orders               <- read_csv('./data/orders.csv') %>%  select(-eval_set)
 products             <- read_csv('./data/products.csv')
 aisles               <- read_csv('./data/aisles.csv')
 departments          <- read_csv('./data/departments.csv')
 
+
+# Tamano de muestra con un margen de error del 1% y confianza del 99%
+sample_size <- sample_size_calc(
+  population = length(unique(orders$user_id)),
+  error      = 0.01,
+  conf       = 0.99
+)
+
+
 # Semilla para reproduciblidad
 set.seed(1008)
 
 # Muestra de 10.00 clientes aleatorios
-users_sample <- sample.int(length(unique(orders$user_id)), 10000)
+users_sample <- sample.int(length(unique(orders$user_id)), sample_size)
 
 orders %<>%
   filter(user_id %in% users_sample)
