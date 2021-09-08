@@ -128,31 +128,15 @@ order_products %>%
   arrange(desc(count)) 
 ```
 
-
-```{r}
-rules_aisles <- order_products %>% 
-  left_join(product_catalog, by = "product_id") %>% 
-  group_by(aisle) %>% 
-  count() %>% 
-  ungroup() %>% 
-  arrange(desc(n)) %>% 
- # filter(!aisle %in% c("fresh fruits","fresh vegetables", "packaged vegetables fruits" )) %>% 
-  mutate(pct = n / sum(n),
-         cumulative = cumsum(pct)) %>% 
-  filter(cumulative <= 0.8) %>% 
-  select(aisle) %>% 
-  pull()
-```
-
 ## Reglas de asociacion - Preparacion de datos
 
 ```{r}
 transactionsDF <- read.transactions(file = "../data/order_products_samples.csv",
-                                   format = "single",
-                                   sep = ",",
-                                   header = TRUE,
-                                   cols = c("order_id", "department"),
-                                   rm.duplicates = TRUE)
+                                     format = "single",
+                                     sep = ",",
+                                     header = TRUE,
+                                     cols = c("order_id", "department"),
+                                     rm.duplicates = TRUE)
 
 
 ```
@@ -185,7 +169,7 @@ item_frequencies %>% sort(decreasing = TRUE) %>% head(10)
 ```{r}
 support_ <- 5000 / dim(transactionsDF)[1]
 itemsets <- apriori(data = transactionsDF,
-                    parameter = list(support = support_,
+                    parameter = list(support = 0.2,
                                      confidence=0.7,
                                      maxlen=2)) 
 ```
@@ -222,24 +206,52 @@ plot(sort(itemsets, by='lift'),
 
 ```{r}
 
+aa <- product_catalog %>% 
+  group_by(aisle) %>%  count()
+    filter(aisle %in% c("fresh fruits","fresh vegetables" )) %>% 
+    select(product_name) %>% distinct() %>% 
+    count()
+
+rules_aisles <- order_products %>% 
+  left_join(product_catalog, by = "product_id") %>% 
+  group_by(aisle) %>% 
+  count() %>% 
+  ungroup() %>% 
+  arrange(desc(n)) %>% 
+  filter(aisle %in% c("fresh fruits","fresh vegetables", "packaged vegetables fruits" )) %>% 
+  # mutate(pct = n / sum(n),
+  #        cumulative = cumsum(pct)) %>% 
+  # filter(cumulative <= 0.8) %>% 
+  select(aisle) %>% 
+  pull()
+
 strategy1 <- product_catalog %>%  filter(department %in% c("produce" , "dairy eggs")) %>% select(product_name) %>% pull()
+
+
+fresh_products <- 
+  order_products %>% 
+  left_join(product_catalog, by = "product_id")%>%
+  filter(aisle %in% c("fresh fruits","fresh vegetables" )) %>% 
+  select(product_name) %>% distinct() %>%   pull()
 
 products_ <- read.transactions(file = "../data/order_products_samples.csv",
                                    format = "single",
                                    sep = ",",
                                    header = TRUE,
-                                   cols = c("order_id", "aisle"),
+                                   cols = c("order_id", "product_name"),
                                    rm.duplicates = TRUE)
 
-rules_def <- vector(mode = "list",length = length(rules_aisles))
+rules_def <- vector(mode = "list",length = length(fresh_products))
 
-for (i in seq_along(rules_aisles)) {
+for (i in seq_along(fresh_products)) {
+  
+  message("Iteracion ", i)
   
   rule_strategy1 <- apriori(data = products_,
                     parameter = list(support = 0.0001,
-                                     confidence=0.7,
-                                     maxlen=4),
-                    appearance = list(rhs = rules_aisles[i])) 
+                                     confidence=0.5,
+                                     maxlen=2),
+                    appearance = list(rhs = fresh_products[i])) 
   
   if (length(rule_strategy1) == 0) {
     next
@@ -252,8 +264,6 @@ for (i in seq_along(rules_aisles)) {
     
     rules_def[[i]] <- rules_df
   }
-  
-  
   
   
 }
@@ -285,6 +295,72 @@ inspect(sort(rule_strategy1, by = "count", decreasing = TRUE))
 
 ```{r}
 plot(sort(rule_strategy1, by='lift'),
+     method="graph",
+     edge.arrow.size = 0.2,
+     colors = c("#6F69AC", "#E8F6EF"))
+
+```
+
+### Iteracion estrategias
+
+
+```{r}
+
+granola_yogurt <- read_csv("../data/order_products_samples.csv") %>% 
+  filter(aisle %in% c("granola", "yogurt"))
+
+write.csv(granola_yogurt, file = "../data/granola_yogurt.csv")
+
+products_ap <- read.transactions(file = "../data/order_products_samples.csv",
+                                   format = "single",
+                                   sep = ",",
+                                   header = TRUE,
+                                   cols = c("order_id", "aisle"),
+                                   rm.duplicates = TRUE)
+
+rule_strategy <- apriori(data = products_ap,
+                    parameter = list(support = 0.01,
+                                     confidence=0.5,
+                                     maxlen=2)
+                    #appearance = list(rhs = )
+                    ) 
+
+rules_df <- as(rule_strategy, "data.frame") %>% 
+  separate(rules, c("lhs", "rhs"), "=>") 
+  
+
+```
+
+```{r}
+inspect(sort(rule_strategy, by = "lift", decreasing = TRUE)[1:50])
+
+```
+
+
+```{r}
+rules_df %>% 
+  rename(consecuente = rhs,
+         transacciones = count ) %>% 
+  ggplot(aes(x = support, y = lift, size = transacciones, color = consecuente)) +
+  geom_point() +
+  custom_style() +
+  labs(
+    title = "Reglas de asociación por pasillos",
+    subtitle = "Soporte vs. Lift",
+    caption = "Soporte: 1%, Confianza: 70%, MaxLen: 3"
+    
+  ) +
+  xlab("Soporte") +
+  ylab("Lift") -> assoc_rules_ggplot
+
+ggsave(filename = "../img/supp_lift.png",
+       plot = assoc_rules_ggplot)
+
+```
+
+
+```{r}
+plot(sort(rule_strategy, by='lift'),
      method="graph",
      edge.arrow.size = 0.2,
      colors = c("#6F69AC", "#E8F6EF"))

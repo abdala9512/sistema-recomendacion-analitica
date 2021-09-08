@@ -20,7 +20,7 @@ custom_style <- function(){
                                           margin=ggplot2::margin(9,0,9,0)),
     plot.caption = ggplot2::element_text(
       family = font,
-      size = 8
+      size = 10
     ),
 
 

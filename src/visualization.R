@@ -208,3 +208,23 @@ order_products %>%
 ggsave(filename = "./img/box_compras_departamento.png",
        plot = dist_por_depto )
 
+# Ordenes promedio vs. productos promedio
+
+
+order_clientes <-
+  order_products %>%
+  left_join(orders, by = "order_id") %>%
+  group_by(user_id, order_id) %>%
+  count() %>%
+  group_by(user_id ) %>%
+  summarise(productos_promedio = mean(n)) %>%
+  left_join(
+    orders %>%
+      group_by(user_id) %>%
+      count(),
+    by = "user_id"
+  )
+
+
+ggplot(order_clientes, aes(x = n, y = productos_promedio)) +
+  geom_point()
