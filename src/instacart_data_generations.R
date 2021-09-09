@@ -79,3 +79,10 @@ write_csv(order_products %>%
 
 
 rm(list = ls()); gc()
+
+
+
+
+load("../data/instcart_data_sample.RData")
+
+
